@@ -23,7 +23,8 @@ CXXFLAGS := -O2 -fPIC -Wall -Wextra --std=c++11
 # Makefile code common to all platforms
 #****************************************************************************
 CXXFLAGS := ${CXXFLAGS} ${DEFINES}
-OBJECTS := $(addsuffix .o,$(basename ${SOURCE}))
+OBJECTS := $(addsuffix .o,$(basename ${SOURCE})) filtering.o blockmatching.o dct8x8.o
+# OBJECTS = ${OBJECTS} filtering.o blockmatching.o dct8x8.o
 
 #****************************************************************************
 # Compile block

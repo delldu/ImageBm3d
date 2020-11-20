@@ -20,7 +20,8 @@ LIBS	:= -L.. -lbm3d -L/usr/local/cuda/lib64 -lcufft -lcudart -lnimage -ljpeg -lp
 
 DEFINES :=
 
-CFLAGS := -O2 -fPIC -Wall -Wextra
+# CFLAGS := -O2 -fPIC -Wall -Wextra
+CXXFLAGS := -O2 -fPIC -Wall -Wextra --std=c++11
 LDFLAGS := -fPIC
 
 #****************************************************************************
@@ -37,7 +38,10 @@ OBJECT := $(addsuffix .o,$(basename ${SOURCE}))
 all: ${TARGET}
 
 ${TARGET}: ${OBJECT}
-	${CC} ${LDFLAGS} -o ${TARGET} ${OBJECT} ${LIBS}
+	${CXX} ${LDFLAGS} -o ${TARGET} ${OBJECT} ${LIBS}
+
+main.o: main.c
+	${CXX} ${CXXFLAGS} ${INCS} -c $< -o $@
 
 install:
 	install -m 755 ${TARGET} ${INSTALL_DIR}/bin

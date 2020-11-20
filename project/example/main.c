@@ -13,16 +13,21 @@
 #include "nimage/image.h"
 #include "bm3d.h"
 
+#define COLOR_IMAGE_CHANNELS 3
+#define DEFAULT_NOISE_LEVEL 5
+
 IMAGE *image_frombm3d(unsigned char *data, int channels, int height, int width)
 {
 	int i, j;
 	IMAGE *image = NULL;
 	unsigned char *d;
 
-	if (channels != 1 || channels != 3)
+	if (channels != 1 && channels != 3)
 		return NULL;
-	d = data;
+
 	image = image_create(height, width); CHECK_IMAGE(image);
+
+	d = data;
 	switch (channels) {
 	case 1:
 		image_foreach(image, i, j)
@@ -50,6 +55,8 @@ int image_tobm3d(IMAGE * image, unsigned char *data, int channels)
 {
 	int i, j;
 	unsigned char *d;
+
+	check_image(image);
 
 	d = data;
 	switch (channels) {
@@ -81,37 +88,31 @@ void help(char *cmd)
 	printf("    -h, --help                   Display this help.\n");
 	printf("    -i, --input <file>           Input image file.\n");
 	printf("    -o, --output <file>          Output image file.\n");
-	printf("    -s, --sigma <number>         Noise level (default: 25).\n");
-	printf("    -r, --refence <file>         Reference image.\n");
+	printf("    -s, --sigma <number>         Noise level (default: %d).\n", DEFAULT_NOISE_LEVEL);
 
 	exit(1);
 }
 
 int main(int argc, char **argv)
 {
-	int optc;
+	int optc, ret, k;
 	int option_index = 0;
 	char *input_file = NULL;
 	char *output_file = NULL;
-	unsigned int sigma = 25;
-	int twostep = 1;
-	char *reference_file = NULL;
-
-	// NosiyImage DenoisedImage sigma [color [twostep [quiet [ReferenceImage]]]]
+	unsigned int sigma = DEFAULT_NOISE_LEVEL;
 
 	struct option long_opts[] = {
 		{ "help", 0, 0, 'h'},
 		{ "input", 1, 0, 'i'},
 		{ "output", 1, 0, 'o'},
 		{ "sigma", 1, 0, 's'},
-		{ "reference", 1, 0, 'r'},
 		{ 0, 0, 0, 0}
 	};
 
 	if (argc <= 1)
 		help(argv[0]);
 	
-	while ((optc = getopt_long(argc, argv, "h i: o: s: r:", long_opts, &option_index)) != EOF) {
+	while ((optc = getopt_long(argc, argv, "h i: o: s:", long_opts, &option_index)) != EOF) {
 		switch (optc) {
 		case 'i':
 			input_file = optarg;
@@ -122,40 +123,42 @@ int main(int argc, char **argv)
 		case 's':
 			sigma = (unsigned)atoi(optarg);
 			break;
-		case 'r':
-			reference_file = optarg;
-			break;
 		case 'h':	// help
 		default:
 			help(argv[0]);
 			break;
-	    	}
+	    }
 	}
 
 	if (! input_file) {
 		help(argv[0]);
 	}
 	if (! output_file)
-		output_file = "denoised.png";
+		output_file = (char *)"result.png";
 
 	IMAGE *image = image_load(input_file); check_image(image);
-	image_show(image, "original");
 	unsigned char *imgdata = (unsigned char *)malloc(3 * image->height * image->width);
 	unsigned char *outdata = (unsigned char *)malloc(3 * image->height * image->width);
-	unsigned int sigmas[3];
+	unsigned int sigmas[COLOR_IMAGE_CHANNELS];
+	for (k = 0; k < COLOR_IMAGE_CHANNELS; k++)
+		sigmas[k] = sigma * sigma;
+	image_tobm3d(image, imgdata, COLOR_IMAGE_CHANNELS);
 
-	image_tobm3d(image, imgdata, 3);
-	sigmas[0] = sigmas[1] = sigmas[2] = sigma * sigma;
-	denoise(imgdata, 3, image->height, image->width, sigmas, outdata, 1);
-	
-	IMAGE *denoised = image_frombm3d(outdata, 3, image->height, image->width);
-	image_show(denoised, "denoised");
+
+	ret = denoise(imgdata, COLOR_IMAGE_CHANNELS, image->height, image->width, sigmas, outdata, 1);
+
+	if (ret == RET_OK) {
+		IMAGE *denoised = image_frombm3d(outdata, COLOR_IMAGE_CHANNELS, image->height, image->width);
+		check_image(denoised);
+
+		image_save(denoised, output_file);
+		image_destroy(denoised);
+	}
 
 	free(imgdata);
 	free(outdata);
 
 	image_destroy(image);
-	image_destroy(denoised);
 
-	return 0;
+	return ret;
 }

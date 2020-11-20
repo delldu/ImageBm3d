@@ -13,9 +13,6 @@ LIB_NAME := libbm3d
 CUDA_INCLUDE :=/usr/local/cuda/include
 CUDA_FLAGS= -arch=sm_35
 
-SOURCE :=  \
-	bm3d.cpp
-
 DEFINES := 
 CXXFLAGS := -O2 -fPIC -Wall -Wextra --std=c++11
 
@@ -23,7 +20,7 @@ CXXFLAGS := -O2 -fPIC -Wall -Wextra --std=c++11
 # Makefile code common to all platforms
 #****************************************************************************
 CXXFLAGS := ${CXXFLAGS} ${DEFINES}
-OBJECTS := $(addsuffix .o,$(basename ${SOURCE})) filtering.o blockmatching.o dct8x8.o
+OBJECTS := bm3d.o filtering.o blockmatching.o dct8x8.o
 # OBJECTS = ${OBJECTS} filtering.o blockmatching.o dct8x8.o
 
 #****************************************************************************

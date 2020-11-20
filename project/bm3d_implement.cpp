@@ -1,30 +1,20 @@
-#define NOMINMAX
 #include "params.hpp"
 
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <device_launch_parameters.h>
 
-#include <algorithm>			//min  max
 #include <vector>
-#include <vector_types.h>
-#include <vector_functions.h>
-#include <math.h>
 
 //Exception handling
 #include <thrust/system_error.h>
 #include <thrust/system/cuda/error.h>
 #include <sstream>
-#include <stdexcept>
 
 //Debug
-#include <fstream>
 #include <iostream>
 
 #include <unistd.h>
 #include <time.h>
-#include <sys/times.h>
-#include <sys/time.h>
 
 //2DDCT - has to be consistent with dct8x8.cu
 #define KER2_BLOCK_WIDTH 128
@@ -210,26 +200,26 @@ class BM3D {
 							   sizeof(float) * (maxN + 1) * maxk * maxk * h_batch_size.x * h_batch_size.y));
 	}
 	//Allocate device buffers dependent on image dimensions
-		void allocate_device_image(uint width, uint height, uint channels) {
+	void allocate_device_image(uint width, uint height, uint channels) {
 		d_noisy_image.resize(channels);
 		d_denoised_image.resize(channels);
 		d_numerator.resize(channels);
 		d_denominator.resize(channels);
 
 		int size = width * height;
-	  for (auto & it:d_noisy_image) {
+	    for (auto & it:d_noisy_image) {
 			cuda_error_check(cudaMalloc((void **) &it, sizeof(uchar) * size));
 		}
 
-	  for (auto & it:d_denoised_image) {
+	    for (auto & it:d_denoised_image) {
 			cuda_error_check(cudaMalloc((void **) &it, sizeof(uchar) * size));
 		}
 
-	  for (auto & it:d_numerator) {
+	    for (auto & it:d_numerator) {
 			cuda_error_check(cudaMalloc((void **) &it, sizeof(float) * size));
 		}
 
-	  for (auto & it:d_denominator) {
+	    for (auto & it:d_denominator) {
 			cuda_error_check(cudaMalloc((void **) &it, sizeof(float) * size));
 		}
 	}
@@ -797,20 +787,6 @@ class BM3D {
 
 		h_batch_size = make_uint2(256, 128);
 	}
-	// BM3D(uint n, uint k, uint N, uint T, uint p, float L3D):h_hard_params(n, k, N, T, p, L3D),
-	//  h_wien_params(n, k, N, T, p, L3D),
-	//  d_gathered_stacks(0), d_gathered_stacks_basic(0), d_w_P(0), d_stacks(0), d_num_patches_in_stack(0),
-	//  h_reserved_width(0), h_reserved_height(0), h_reserved_channels(0), h_reserved_two_step(0), d_kaiser_window(0),
-	//  _verbose(false) {
-	//  int device;
-	//  cuda_error_check(cudaGetDevice(&device));
-	//  cuda_error_check(cudaGetDeviceProperties(&properties, device));
-
-	//  h_batch_size = make_uint2(256, 128);
-
-	//  if (k != 8)
-	//      throw std::invalid_argument("k has to be 8, other values not implemented yet.");
-	// }
 
 	~BM3D() {
 		free_device_image();
@@ -861,36 +837,31 @@ class BM3D {
 		//Copy back
 		copy_host_image(dst_image, width, height, channels);
 
-		//if(_verbose)
-		std::cout << "Total time: " << total.getSeconds() << std::endl;
+		if(_verbose)
+		    std::cout << "Total time: " << total.getSeconds() << std::endl;
 	}
 
-	/*void denoise_device_image(uchar *src_image, uchar *dst_image, int width, int height, int channels, bool two_step)
-	   {
-	   //TODO
-	   } */
-
 	void set_hard_params(uint n, uint k, uint N, uint T, uint p, float L3D) {
+		if (k != 8)
+			throw std::invalid_argument("k has to be 8, other values not implemented yet.");
+
 		if (h_hard_params.k != k || h_hard_params.N != N) {
 			h_hard_params = Params(n, k, N, T, p, L3D);
 			free_device_auxiliary_arrays();
 			allocate_device_auxiliary_arrays();
 		} else
 			h_hard_params = Params(n, k, N, T, p, L3D);
-
-		if (k != 8)
-			throw std::invalid_argument("k has to be 8, other values not implemented yet.");
 	}
 	void set_wien_params(uint n, uint k, uint N, uint T, uint p) {
+		if (k != 8)
+			throw std::invalid_argument("k has to be 8, other values not implemented yet.");
+
 		if (h_wien_params.k != k || h_wien_params.N != N) {
 			h_wien_params = Params(n, k, N, T, p, 0.0);
 			free_device_auxiliary_arrays();
 			allocate_device_auxiliary_arrays();
 		} else
 			h_wien_params = Params(n, k, N, T, p, 0.0);
-
-		if (k != 8)
-			throw std::invalid_argument("k has to be 8, other values not implemented yet.");
 	}
 
 	void set_verbose(bool verbose) {

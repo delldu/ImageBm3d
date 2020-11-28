@@ -21,7 +21,6 @@ CXXFLAGS := -O2 -fPIC -Wall -Wextra --std=c++11
 #****************************************************************************
 CXXFLAGS := ${CXXFLAGS} ${DEFINES}
 OBJECTS := bm3d.o filtering.o blockmatching.o dct8x8.o
-# OBJECTS = ${OBJECTS} filtering.o blockmatching.o dct8x8.o
 
 #****************************************************************************
 # Compile block

@@ -1,4 +1,3 @@
-#include "indices.cuh"
 #include "params.hpp"
 
 #include <cuda.h>

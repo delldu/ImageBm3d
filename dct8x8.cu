@@ -1,4 +1,4 @@
-#include "indices.cuh"
+#include "params.hpp"
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 /*

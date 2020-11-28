@@ -1,3 +1,5 @@
+# sudo apt install nvidia-cuda-toolkit
+
 CPP=g++
 CFLAGS= -O2 --std=c++11
 CUFLAGS= -arch=sm_35
@@ -19,12 +21,14 @@ main_nodisplay.o: main_nodisplay.cpp $(HEADERS) $(CUHEADERS)
 	@echo Compilling main_nodiplay.cpp
 	$(CPP) $(CFLAGS) -m64 -c  $(addprefix -I,$(INCLUDE)) $< -o $@
 
-filtering.o: filtering.cu indices.cuh params.hpp
+filtering.o: filtering.cu params.hpp
 	@echo Compilling filtering.cu
 	@nvcc $(addprefix -I,$(INCLUDE)) -m64 -c $(CUFLAGS) $< -o $@
-blockmatching.o: blockmatching.cu indices.cuh params.hpp
+
+blockmatching.o: blockmatching.cu params.hpp
 	@echo Compilling blockmatching.cu
 	@nvcc $(addprefix -I,$(INCLUDE)) -m64 -c --std=c++11 $(CUFLAGS) $< -o $@
+
 dct8x8.o: dct8x8.cu
 	@echo Compilling dct8x8.cu
 	@nvcc $(addprefix -I,$(INCLUDE)) -m64 -c $(CUFLAGS) $< -o $@
@@ -32,9 +36,10 @@ dct8x8.o: dct8x8.cu
 clear:
 	@echo Removing object files ...
 	-@rm -f *.obj
+	rm -rf *.o
 
 clean: clear
 
 purge: clear
 	@echo Removing executables ...
-	-@rm -f $(TARGETS)
+	-@rm -f $(TARGET)
